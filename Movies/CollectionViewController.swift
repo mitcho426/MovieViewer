@@ -1,8 +1,8 @@
 //
-//  MoviesViewController.swift
+//  CollectionViewController.swift
 //  Movies
 //
-//  Created by mwong on 1/21/17.
+//  Created by bwong on 2/4/17.
 //  Copyright © 2017 mwong. All rights reserved.
 //
 
@@ -10,29 +10,28 @@ import UIKit
 import AFNetworking
 import MBProgressHUD
 
-class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate  {
+class CollectionViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UISearchBarDelegate {
     
-    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var searchBar: UISearchBar!
     
     var movies: [NSDictionary]?
     var filteredTitles: [NSDictionary]?
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Initialize a UIRefreshControl
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        searchBar.delegate = self
+    
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), for: UIControlEvents.valueChanged)
         
-        // add refresh control to table view
-        tableView.insertSubview(refreshControl, at: 0)
-        
-        tableView.dataSource = self
-        tableView.delegate = self
-        searchBar.delegate = self
+        collectionView.insertSubview(refreshControl, at: 0)
         
         self.networkRequest()
+        // Do any additional setup after loading the view.
     }
 
     override func didReceiveMemoryWarning() {
@@ -40,24 +39,23 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         // Dispose of any resources that can be recreated.
     }
     
-    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
         return filteredTitles?.count ?? 0
     }
     
-    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) ->  UITableViewCell {
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "MovieCell", for: indexPath) as! MoviesCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell", for: indexPath) as! CollectionViewCell
         
         let movie = filteredTitles![indexPath.row]
         let title = movie["title"] as! String
-        let overview = movie["overview"] as! String
         let posterPath = movie["poster_path"] as! String
         let baseUrl = "https://image.tmdb.org/t/p/w500"
         let imageUrl = NSURL(string: baseUrl + posterPath)
         
-        cell.titleLabel.text = title
-        cell.overviewLabel.text = overview
+        cell.posterTitle.text = title
+        cell.posterTitle.isHidden = true
         cell.posterView.setImageWith(imageUrl as! URL)
         
         return cell
@@ -79,7 +77,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                     
                     self.movies = dataDictionary["results"] as? [NSDictionary]
                     self.filteredTitles = self.movies
-                    self.tableView.reloadData()
+                    self.collectionView.reloadData()
                     
                     MBProgressHUD.hide(for: self.view, animated: true)
                 }
@@ -89,9 +87,6 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
     }
     
-    // Makes a network request to get updated data
-    // Updates the tableView with the new data
-    // Hides the RefreshControl
     func refreshControlAction(_ refreshControl: UIRefreshControl) {
         
         // ... Create the URLRequest `myRequest` ...
@@ -111,7 +106,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
             
             // ... Use the new data to update the data source ...
             // Reload the tableView now that there is new data
-            self.tableView.reloadData()
+            self.collectionView.reloadData()
             // Tell the refreshControl to stop spinning
             refreshControl.endRefreshing()
         }
@@ -129,7 +124,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
             return (movie["title"] as! String).range(of: searchText, options: .caseInsensitive) != nil
         })
         
-        self.tableView.reloadData()
+        self.collectionView.reloadData()
     }
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
@@ -142,7 +137,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
 //        searchBar.text = ""
 //        searchBar.resignFirstResponder()
 //    }
-//    
+    
 
     /*
     // MARK: - Navigation
