@@ -131,6 +131,9 @@ class CollectionViewController: UIViewController, UICollectionViewDataSource, UI
         self.searchBar.showsCancelButton = false
     }
     
+    @IBAction func onTap(_ sender: Any) {
+        view.endEditing(true)
+    }
 //    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
 //        
 //        searchBar.showsCancelButton = false

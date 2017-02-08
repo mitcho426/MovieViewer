@@ -17,12 +17,14 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     
     var movies: [NSDictionary]?
     var filteredTitles: [NSDictionary]?
-
+    var endPoint: String!
+    let refreshControl = UIRefreshControl()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // Initialize a UIRefreshControl
-        let refreshControl = UIRefreshControl()
+        
         refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), for: UIControlEvents.valueChanged)
         
         // add refresh control to table view
@@ -66,7 +68,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     func networkRequest() {
         
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-        let url = URL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")!
+        let url = URL(string: "https://api.themoviedb.org/3/movie/\(endPoint!)?api_key=\(apiKey)")!
         let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
         let session = URLSession(configuration: .default, delegate: nil, delegateQueue: OperationQueue.main)
         
@@ -97,7 +99,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         // ... Create the URLRequest `myRequest` ...
         
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-        let url = URL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")!
+        let url = URL(string: "https://api.themoviedb.org/3/movie/\(endPoint!)?api_key=\(apiKey)")!
         let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
         
         // Configure session so that completion handler is executed on main UI thread
@@ -133,25 +135,38 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     }
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        self.searchBar.showsCancelButton = false
+        self.searchBar.showsCancelButton = true
     }
     
-//    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-//        
-//        searchBar.showsCancelButton = false
-//        searchBar.text = ""
-//        searchBar.resignFirstResponder()
-//    }
-//    
+    @IBAction func onTap(_ sender: Any) {
+        view.endEditing(true)
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+    
+        searchBar.showsCancelButton = true
+        searchBar.text = ""
+        searchBar.resignFirstResponder()
+        self.viewDidLoad()
+    }
 
     /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
+     Prepares transition from this viewcontroller to the next.
+     Declare a variable that references label and variables inside
+     the DetailViewController
+    */
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         // Get the new view controller using segue.destinationViewController.
         // Pass the selected object to the new view controller.
+        let cell = sender as! UITableViewCell
+        let indexPath = tableView.indexPath(for: cell)
+        let movie = movies![indexPath!.row]
+        
+        let detailViewController = segue.destination as! DetailViewController
+        
+        detailViewController.movie = movie
     }
-    */
+    
 
 }
