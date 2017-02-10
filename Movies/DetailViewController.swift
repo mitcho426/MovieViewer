@@ -47,7 +47,7 @@ class DetailViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-//  http://api.themoviedb.org/3/movie/top_rated
+    //
     /*
     // MARK: - Navigation
 

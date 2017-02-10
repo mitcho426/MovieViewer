@@ -10,7 +10,7 @@ import UIKit
 import AFNetworking
 import MBProgressHUD
 
-class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate  {
+class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate, UIScrollViewDelegate  {
     
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var searchBar: UISearchBar!
@@ -18,6 +18,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     var movies: [NSDictionary]?
     var filteredTitles: [NSDictionary]?
     var endPoint: String!
+    var isMoreDataLoading = false
     let refreshControl = UIRefreshControl()
     
     override func viewDidLoad() {
@@ -36,12 +37,16 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
         self.networkRequest()
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
     
+    /*
+     @param UITableView
+     @return numbersOfRowsInSection
+     */
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
         return filteredTitles?.count ?? 0
@@ -110,7 +115,6 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
             delegateQueue: OperationQueue.main)
         
         let task: URLSessionDataTask = session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) in
-            
             // ... Use the new data to update the data source ...
             // Reload the tableView now that there is new data
             self.tableView.reloadData()
@@ -143,18 +147,62 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-    
+        
         searchBar.showsCancelButton = true
         searchBar.text = ""
         searchBar.resignFirstResponder()
         self.viewDidLoad()
     }
-
+    
+    /*
+     When a user scrolls down, the UIScrollView continuously fires this function
+     We can customize the code inside that will repeatedly fire
+     */
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        
+        if(!isMoreDataLoading) {
+            
+            let scrollViewContentHeight = tableView.contentSize.height
+            let scrollOffsetThreshold = scrollViewContentHeight - tableView.bounds.size.height
+            
+            if(scrollView.contentOffset.y > scrollOffsetThreshold && tableView.isDragging) {
+                isMoreDataLoading = true
+                loadMoreData()
+            }
+        }
+    }
+    
+    /*
+     Helper function that loads more data as we continue scrolling
+    */
+    
+    func loadMoreData() {
+        
+        // Grab API request
+        let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
+        let url = URL(string: "https://api.themoviedb.org/3/movie/\(endPoint!)?api_key=\(apiKey)")!
+        let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
+        
+        // Configure session so that completion handler is executed on main UI thread
+        let session = URLSession(
+            configuration: URLSessionConfiguration.default,
+            delegate:nil,
+            delegateQueue:OperationQueue.main
+        )
+        
+        let task : URLSessionDataTask = session.dataTask(with: request,completionHandler: { (data, response, error) in
+            self.isMoreDataLoading = false
+            self.tableView.reloadData()
+        });
+        task.resume()
+    }
+    
     /*
      Prepares transition from this viewcontroller to the next.
      Declare a variable that references label and variables inside
-     the DetailViewController
-    */
+     the DetailViewController class
+     */
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         // Get the new view controller using segue.destinationViewController.
@@ -167,6 +215,4 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
         detailViewController.movie = movie
     }
-    
-
 }
