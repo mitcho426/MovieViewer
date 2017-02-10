@@ -66,6 +66,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         cell.titleLabel.text = title
         cell.overviewLabel.text = overview
         cell.posterView.setImageWith(imageUrl as! URL)
+        cell.selectionStyle = .none
         
         return cell
     }
