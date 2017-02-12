@@ -76,9 +76,8 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
-                <tapGestureRecognizer id="DTX-dt-XZt"/>
             </objects>
-            <point key="canvasLocation" x="3418.5" y="453.5"/>
+            <point key="canvasLocation" x="3417.5" y="664.5"/>
         </scene>
         <!--Collection View-->
         <scene sceneID="vqY-SR-JIG">
@@ -153,7 +152,7 @@
                     </connections>
                 </tapGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="2200" y="1226"/>
+            <point key="canvasLocation" x="3012" y="1451"/>
         </scene>
         <!--Detail View Controller-->
         <scene sceneID="puo-ID-VeQ">
