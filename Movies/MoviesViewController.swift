@@ -14,7 +14,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var searchBar: UISearchBar!
-    
+
     var movies: [NSDictionary]?
     var filteredTitles: [NSDictionary]?
     var endPoint: String!
@@ -27,13 +27,15 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         // Initialize a UIRefreshControl
         
         refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), for: UIControlEvents.valueChanged)
-        
         // add refresh control to table view
+        
         tableView.insertSubview(refreshControl, at: 0)
         
         tableView.dataSource = self
         tableView.delegate = self
         searchBar.delegate = self
+        
+        self.tableView.reloadData()
         
         self.networkRequest()
     }
@@ -47,32 +49,73 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
      @param UITableView
      @return numbersOfRowsInSection
      */
+    
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
         return filteredTitles?.count ?? 0
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) ->  UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "MovieCell", for: indexPath) as! MoviesCell
-        
         let movie = filteredTitles![indexPath.row]
+        
         let title = movie["title"] as! String
         let overview = movie["overview"] as! String
-        let posterPath = movie["poster_path"] as! String
-        let baseUrl = "https://image.tmdb.org/t/p/w500"
-        let imageUrl = NSURL(string: baseUrl + posterPath)
+        
+        let smallBaseUrl = "https://image.tmdb.org/t/p/w45"
+        let largeBaseUrl = "https://image.tmdb.org/t/p/original"
+        
+        if let posterPath = movie["poster_path"] as? String {
+            
+            //let imageUrl = NSURL(string: baseUrl + posterUrl)
+            let smallImageUrl = NSURL(string: smallBaseUrl + posterPath)
+            let largeImageUrl = NSURL(string: largeBaseUrl + posterPath)
+            
+            //let imageRequest = NSURLRequest(url: imageUrl as! URL)
+            let smallImageRequest = NSURLRequest(url: smallImageUrl as! URL)
+            let largeImageRequest = NSURLRequest(url: largeImageUrl as! URL)
+            
+            // Load low resolution poster image, followed by the high resolution version
+            cell.posterView.setImageWith(smallImageRequest as URLRequest, placeholderImage: nil, success: { (smallImageRequest, smallImageResponse, smallImage) in
+                if smallImageResponse != nil {
+                    
+                    // Fade the images as they load
+                    cell.posterView.alpha = 0
+                    cell.posterView.image = smallImage
+                    UIView.animate(withDuration: 0.5, animations: {
+                        cell.posterView.alpha = 1
+                        
+                    }, completion: { (success) -> Void in
+                        // Load high resolution after low resolution images are completed
+                        cell.posterView.setImageWith(largeImageRequest as URLRequest, placeholderImage: nil, success: { (largeImageRequest, slargeImageResponse, largeImage) in
+                            cell.posterView.image = largeImage
+                            
+                        }, failure: {(imageRequest, imageResponse, error) -> Void in
+                            
+                        })
+                    })
+                } else {
+                    // If images are cached, load the large resolution image
+                    cell.posterView.setImageWith(largeImageRequest as URLRequest, placeholderImage: nil, success: { (largeImageRequest, slargeImageResponse, largeImage) in
+                        cell.posterView.image = largeImage
+                    }, failure: {(imageRequest, imageResponse, error) -> Void in
+                        
+                    })
+                }
+            }, failure: {(imageRequest, imageResponse, error) -> Void in
+                
+            })
+        }
+        
         
         cell.titleLabel.text = title
         cell.overviewLabel.text = overview
-        cell.posterView.setImageWith(imageUrl as! URL)
         cell.selectionStyle = .none
         
         return cell
     }
     
     func networkRequest() {
-        
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
         let url = URL(string: "https://api.themoviedb.org/3/movie/\(endPoint!)?api_key=\(apiKey)")!
         let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
@@ -89,6 +132,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                     self.filteredTitles = self.movies
                     self.tableView.reloadData()
                     
+                    //Hides the loading HUD while there is internet connection
                     MBProgressHUD.hide(for: self.view, animated: true)
                 }
             }
@@ -116,23 +160,16 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
             delegateQueue: OperationQueue.main)
         
         let task: URLSessionDataTask = session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) in
-            // ... Use the new data to update the data source ...
-            // Reload the tableView now that there is new data
+
             self.tableView.reloadData()
-            // Tell the refreshControl to stop spinning
             refreshControl.endRefreshing()
         }
         task.resume()
     }
-    
+
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        // When there is no text, filteredData is the same as the original data
-        // When user has entered text into the search box
-        // Use the filter method to iterate over all items in the data array
-        // For each item, return true if the item should be included and false if the
-        // item should NOT be included
         filteredTitles = searchText.isEmpty ? movies : movies?.filter({(movie: NSDictionary) -> Bool in
-            // If dataItem matches the searchText, return true to include it
+            
             return (movie["title"] as! String).range(of: searchText, options: .caseInsensitive) != nil
         })
         
@@ -143,16 +180,12 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         self.searchBar.showsCancelButton = true
     }
     
-    @IBAction func onTap(_ sender: Any) {
-        view.endEditing(true)
-    }
-    
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         
         searchBar.showsCancelButton = true
         searchBar.text = ""
         searchBar.resignFirstResponder()
-        self.viewDidLoad()
+        self.tableView.reloadData()
     }
     
     /*
@@ -170,6 +203,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
             if(scrollView.contentOffset.y > scrollOffsetThreshold && tableView.isDragging) {
                 isMoreDataLoading = true
                 loadMoreData()
+                self.tableView.reloadData()
             }
         }
     }
@@ -198,7 +232,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         });
         task.resume()
     }
-    
+
     /*
      Prepares transition from this viewcontroller to the next.
      Declare a variable that references label and variables inside

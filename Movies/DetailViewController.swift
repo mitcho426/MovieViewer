@@ -33,7 +33,6 @@ class DetailViewController: UIViewController {
         detailTitle.sizeToFit()
         detailOverview.sizeToFit()
     
-        
         let baseURL = "http://image.tmdb.org/t/p/w500/"
         
         if let posterPath = movie["poster_path"] as? String {

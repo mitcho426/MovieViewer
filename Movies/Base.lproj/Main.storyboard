@@ -21,6 +21,7 @@
                                 <rect key="frame" x="0.0" y="50" width="375" height="617"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <gestureRecognizers/>
                                 <searchBar key="tableHeaderView" contentMode="redraw" id="d7x-Pv-eRu">
                                     <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
@@ -75,13 +76,9 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
-                <tapGestureRecognizer id="DTX-dt-XZt">
-                    <connections>
-                        <action selector="onTap:" destination="BYZ-38-t0r" id="pMx-wQ-iP8"/>
-                    </connections>
-                </tapGestureRecognizer>
+                <tapGestureRecognizer id="DTX-dt-XZt"/>
             </objects>
-            <point key="canvasLocation" x="3419" y="454"/>
+            <point key="canvasLocation" x="3418.5" y="453.5"/>
         </scene>
         <!--Collection View-->
         <scene sceneID="vqY-SR-JIG">
